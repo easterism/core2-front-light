@@ -316,9 +316,8 @@ var edit = {
 					},
 					select: function( event, ui ) {
 						event.preventDefault();
-						inputValue.val(ui.item.value);
-						inputTitle.val(ui.item.label);
-						inputTitle.attr('disabled', 'disabled');
+						edit.modal2.key = options.id;
+						edit.modal2.choose(ui.item.value, ui.item.label);
 					},
 					close: function( event, ui ) {
 						event.preventDefault();
@@ -1204,6 +1203,11 @@ var edit = {
 				'<input type="text" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
 				'</td>';
 
+			var tplFieldTextarea =
+				'<td>' +
+				'<textarea class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]></textarea>' +
+				'</td>';
+
 			var tplFieldDate =
 				'<td>' +
 				'<input type="date" class="form-control input-sm" name="control[[FIELD]][[NUM]][[CODE]]" value="[VALUE]" [ATTRIBUTES]>' +
@@ -1256,19 +1260,20 @@ var edit = {
 						case 'datetime': tplFieldCustom = tplFieldDatetime; break;
 						case 'number':   tplFieldCustom = tplFieldNumber; break;
 						case 'hidden':   tplFieldCustom = tplFieldHidden; break;
+						case 'textarea': tplFieldCustom = tplFieldTextarea; break;
 						case 'select':
 							var selectOptions = '';
 
-							$.each(field['options'], function (value, title) {
+							$.each(field['options'], function (key, option) {
 								var selected = '';
 
 								if (field['default_value']) {
-									selected = field['default_value'] === value ? 'selected' : '';
+									selected = field['default_value'] === option.val ? 'selected' : '';
 								} else {
-									selected = value === '' ? 'selected' : ''
+									selected = option.val === '' ? 'selected' : ''
 								}
 
-								selectOptions += "<option value=\"" + value + "\" " + selected + ">" + title + "</option>";
+								selectOptions += "<option value=\"" + option.val + "\" " + selected + ">" + option.title + "</option>";
 							});
 
 							tplFieldCustom = tplFieldSelect;

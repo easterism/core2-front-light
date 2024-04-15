@@ -13,5 +13,12 @@
     "menuMobile": "menuMobile.tpl",
     "html-navigation-divider": "html/navigation.divider.html",
     "html-navigation-link": "html/navigation.link.html",
-    "html-navigation-dropdown": "html/navigation.dropdown.html"
+    "html-navigation-dropdown": "html/navigation.dropdown.html",
+    "html-edit-select2": "html/edit/select2.html",
+    "html-edit-multiselect2": "html/edit/multiselect2.html",
+    "html-edit-multilist2": "html/edit/multilist2.html",
+    "html-edit-multilist3": "html/edit/multilist3.html",
+    "html-edit-dataset": "html/edit/dataset.html",
+    "html-edit-files": "html/edit/files.html",
+    "html-edit-tags": "html/edit/tags.html"
 }

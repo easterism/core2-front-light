@@ -238,6 +238,290 @@ CoreUI.table = {
     },
 
 
+    field: {
+
+        /**
+         * Для указанного поля добавляет возможность автокомплита
+         * @param {HTMLElement|jQuery} input
+         * @param {object}             options
+         */
+        autocomplete: function (input, options) {
+
+            options = $.extend(true, { url: '', minLength: 3 }, options);
+
+            $(input).autocomplete({
+                source: function (request, response) {
+
+                    $.ajax({
+                        method: 'GET',
+                        data: {
+                            query: $.trim(request.term)
+                        },
+                        url: options.url,
+                    }).done(function (data) {
+
+                        try {
+                            data = CoreUI.table._isObject(data) ? data : JSON.parse(data);
+
+                        } catch (e) {
+                            response( [ { __empty__ : 'Не найдено' } ]);
+                            return false;
+                        }
+
+                        var items = typeof data === 'object' && data.hasOwnProperty('items') && Array.isArray(data.items)
+                            ? data.items
+                            : [];
+
+                        response(items);
+
+                    }).fail(function (error) {
+                        response([]);
+                    });
+                },
+                minLength: options.minLength,
+                focus: function( event, ui ) {
+                    event.preventDefault();
+                    $(input).val(ui.item.label);
+                },
+                select: function( event, ui ) {
+                    event.preventDefault();
+                    $(input).val(ui.item.label);
+                },
+                close: function( event, ui ) {
+                    event.preventDefault();
+                },
+                create: function (event, ui) {
+
+                    $(this).data('ui-autocomplete')._renderItem = function (ul, item) {
+                        var info  = item.info ? '<br><small class="text-muted">' + item.info + '</small>': '';
+                        var term  = this.term.split(' ').join('|');
+                        var label = item.label;
+
+                        if (term) {
+                            term = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
+                            label = label.replace(
+                                new RegExp("(" + term + ")", "gi"),
+                                "<b>$1</b>"
+                            );
+                        }
+
+                        return $('<li>')
+                            .attr( "data-value", item.value )
+                            .append('<a>' + label + info + '</a>')
+                            .appendTo(ul);
+                    };
+
+                    $(this).data('ui-autocomplete')._renderMenu = function (ul, items) {
+                        var that         = this;
+                        var currentGroup = "";
+
+                        ul.css('min-width', $(input).width());
+                        ul.css('max-width', 400);
+
+                        $.each( items, function( index, item ) {
+                            if (item.group && item.group !== currentGroup) {
+                                ul.append( "<li class=\"ui-autocomplete-category\">" + item.group + "</li>" );
+                                currentGroup = item.group;
+                            }
+
+                            that._renderItemData( ul, item );
+                        });
+                    };
+                }
+            })
+        },
+
+
+        /**
+         * Для указанного поля добавляет возможность автокомплита с таблицей
+         * @param {HTMLElement|jQuery} input
+         * @param {object}             options
+         */
+        autocompleteTable: function (input, options) {
+
+            options = $.extend(true, { url: '', minLength: 3 }, options);
+
+            var fieldSelect = null;
+            var columns     = [];
+
+            $(input).autocomplete({
+                items: '.ui-menu-item',
+                source: function (request, response) {
+
+                    $.ajax({
+                        method: 'GET',
+                        data: {
+                            query: $.trim(request.term)
+                        },
+                        url: options.url,
+                    }).done(function (data) {
+
+                        try {
+                            data = CoreUI.table._isObject(data) ? data : JSON.parse(data);
+
+                        } catch (e) {
+                            response( [ { __empty__ : 'Не найдено' } ]);
+                            return false;
+                        }
+
+                        columns = CoreUI.table._isObject(data) && data.hasOwnProperty('columns') && Array.isArray(data.columns)
+                            ? data.columns
+                            : [];
+
+                        if (CoreUI.table._isObject(data) &&
+                            data.hasOwnProperty('field_select') &&
+                            typeof data.field_select === 'string'
+                        ) {
+                            fieldSelect = data.field_select;
+
+                        } else if (columns.length > 0) {
+                            $.each(columns, function (key, column) {
+
+                                if (CoreUI.table._isObject(column) &&
+                                    column.hasOwnProperty('field') &&
+                                    typeof column.field === 'string' &&
+                                    column.field
+                                ) {
+                                    fieldSelect = column.field;
+                                    return false;
+                                }
+                            });
+                        }
+
+                        var records = CoreUI.table._isObject(data) && data.hasOwnProperty('records') && Array.isArray(data.records)
+                            ? data.records
+                            : [];
+
+                        response(records.length > 0 ? records : [ { __empty__ : 'Не найдено' } ]);
+
+                    }).fail(function (error) {
+                        response([ { __empty__ : 'Не найдено' } ]);
+                    });
+                },
+                minLength: options.minLength,
+                focus: function( event, ui ) {
+                    event.preventDefault();
+
+                    if (fieldSelect && ui.item) {
+                        if (ui.item._tr) {
+                            ui.item._tr.parent().find('tr').removeClass('active');
+                            ui.item._tr.addClass('active');
+                        }
+
+                        $(input).val(ui.item.hasOwnProperty(fieldSelect) ? ui.item[fieldSelect] : '');
+                    }
+                },
+                select: function( event, ui ) {
+                    event.preventDefault();
+
+                    if (fieldSelect && ui.item) {
+                        $(input).val(ui.item.hasOwnProperty(fieldSelect) ? ui.item[fieldSelect] : '');
+                    }
+                },
+                open: function( event, ui ) {
+                    $('.ui-autocomplete .ui-menu-item:first').trigger('mouseover');
+                },
+                close: function( event, ui ) {
+                    event.preventDefault();
+                },
+                create: function (event, ui) {
+
+                    $(this).data('ui-autocomplete')._renderMenu = function (ul, items) {
+
+                        if (items.hasOwnProperty('0') && items[0].hasOwnProperty('__empty__')) {
+                            ul.css('padding', '5px 10px');
+                            ul.append('<li>' + items[0].__empty__ + '</li>');
+
+                        } else {
+                            ul.css('min-width',  $(input).width());
+                            ul.css('max-width',  800);
+                            ul.css('max-height', 800);
+                            ul.css('overflow',   'auto');
+                            ul.css('padding',    0);
+
+                            var that         = this;
+                            var theadColumns = [];
+
+                            $.each(columns, function (key, column) {
+
+                                if (CoreUI.table._isObject(column) &&
+                                    column.hasOwnProperty('field') &&
+                                    column.hasOwnProperty('label') &&
+                                    typeof column.field === 'string' &&
+                                    typeof column.label === 'string' &&
+                                    column.field &&
+                                    column.label
+                                ) {
+                                    theadColumns.push('<th>' + column.label + '</th>');
+                                }
+                            });
+
+                            ul.append(
+                                '<table class="table table-condensed table-bordered table-hover" style="margin: 0">' +
+                                '<thead><tr>' + theadColumns.join('') + '</tr></thead>' +
+                                '<tbody></tbody>' +
+                                '</table>'
+                            );
+
+                            $.each(items, function (index, item) {
+                                that._renderItemData(ul, ul.find("> table > tbody"), item);
+                            });
+                        }
+                    };
+
+                    $(this).data('ui-autocomplete')._renderItemData = function (ul, tbody, item) {
+                        return this._renderItem(tbody, item)
+                            .data("ui-autocomplete-item", item);
+                    };
+
+                    $(this).data('ui-autocomplete')._renderItem = function (tbody, item) {
+                        var that = this;
+                        var term = this.term.split(' ').join('|');
+                        var $tr  = $('<tr class="ui-menu-item">');
+
+
+                        $.each(columns, function (index, column) {
+
+                            if (CoreUI.table._isObject(column) &&
+                                column.hasOwnProperty('field') &&
+                                column.hasOwnProperty('label') &&
+                                typeof column.field === 'string' &&
+                                typeof column.label === 'string' &&
+                                column.field &&
+                                column.label
+                            ) {
+
+                                var cellContent = item.hasOwnProperty(column.field) && typeof item[column.field] === 'string'
+                                    ? item[column.field]
+                                    : '';
+
+                                if (term) {
+                                    term        = term.replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + '' + '-]', 'g'), '\\$&');
+                                    cellContent = cellContent.replace(
+                                        new RegExp("(" + term + ")", "gi"),
+                                        "<b>$1</b>"
+                                    );
+                                }
+
+                                $('<td>').html(cellContent).appendTo($tr);
+                            }
+                        });
+
+                        $tr.click(function () {
+                            $(input).val(item.hasOwnProperty(fieldSelect) ? item[fieldSelect] : '');
+                            that.close();
+                        });
+
+                        item._tr = $tr;
+
+                        return $tr.appendTo(tbody);
+                    };
+                }
+            })
+        }
+    },
+
+
     columnSwitcher: {
 
         /**
@@ -941,21 +1225,42 @@ CoreUI.table = {
     /**
      * Раскрытие / скрытие дополнительных данных строки
      * @param resource
-     * @param columnNmbr
+     * @param rowNmbr
      * @param url
      * @param isAjax
+     * @deprecated toggleExpandRowUrl
      */
-    toggleExpandColumn : function (resource, columnNmbr, url, isAjax) {
+    toggleExpandColumn : function (resource, rowNmbr, url, isAjax) {
 
-        var urlHash = this.crc32(url);
-        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(columnNmbr);
-        var isLoad  = ! row.next().hasClass('row-expand-name-' + urlHash);
+        this.toggleExpandRowUrl(resource, rowNmbr, url, isAjax);
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param rowNmbr
+     * @param url
+     * @param isAjax
+     * @param isRebuild
+     */
+    toggleExpandRowUrl : function (resource, rowNmbr, url, isAjax, isRebuild) {
+
+        var hash    = this.crc32(url);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(rowNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + hash);
 
         if (row.hasClass('row-expanded')) {
-            row.removeClass('row-expanded');
-            row.next().hide('fast', function () {
-                $(this).remove();
-            })
+            if (row.next().is(':visible')) {
+                row.next().hide('fast', function () {
+                    if (isRebuild === null || isRebuild) {
+                        row.removeClass('row-expanded');
+                        $(this).remove();
+                    }
+                })
+            } else {
+                row.next().show('fast')
+            }
         }
 
         if (isLoad) {
@@ -972,7 +1277,7 @@ CoreUI.table = {
                     row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + response + '</td></tr>');
                     row.addClass('row-expanded');
                     row.next()
-                        .addClass('row-expand-name-' + urlHash)
+                        .addClass('row-expand-name-' + hash)
                         .show('fast');
 
                     if (isAjax) {
@@ -991,6 +1296,42 @@ CoreUI.table = {
                     }
                 }
             });
+        }
+    },
+
+
+    /**
+     * Раскрытие / скрытие дополнительных данных строки
+     * @param resource
+     * @param rowNmbr
+     * @param content
+     * @param isRebuild
+     */
+    toggleExpandRowContent : function (resource, rowNmbr, content, isRebuild) {
+
+        var hash    = this.crc32(content);
+        var row     = $('#table-' + resource + ' > tbody > tr.row-table').eq(rowNmbr);
+        var isLoad  = ! row.next().hasClass('row-expand-name-' + hash);
+
+        if (row.hasClass('row-expanded')) {
+            if (row.next().is(':visible')) {
+                row.next().hide('fast', function () {
+                    if (isRebuild === null || isRebuild) {
+                        row.removeClass('row-expanded');
+                        $(this).remove();
+                    }
+                })
+            } else {
+                row.next().show('fast')
+            }
+        }
+
+        if (isLoad) {
+            row.after('<tr class="row-expand" style="display: none"><td colspan="1000">' + content + '</td></tr>');
+            row.addClass('row-expanded');
+            row.next()
+                .addClass('row-expand-name-' + hash)
+                .show('fast');
         }
     },
 
@@ -1048,6 +1389,18 @@ CoreUI.table = {
             preloader.callback();
             CoreUI.table._callEventReload(resource);
         });
+    },
+
+
+    /**
+     * Проверка переменной является ли она объектом
+     * @param {*} variable
+     * @return {boolean}
+     * @private
+     */
+    _isObject: function (variable) {
+
+        return typeof variable === 'object' && variable !== null && ! Array.isArray(variable);
     }
 };
 

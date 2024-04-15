@@ -598,6 +598,9 @@ table.editTable {
     min-width: 190px;
     box-sizing: border-box;
 }
+.eFirstCell .fa.fa-info-circle {
+    cursor: help;
+}
 .newRulesModule {
 	text-decoration:underline;
 	cursor:pointer;
@@ -761,6 +764,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 .field-dataset-items .field-dataset-item > td {
     padding-bottom: 8px;
     padding-right: 4px;
+    vertical-align: top;
 }
 .field-dataset-items .field-dataset-item > td .field-dataset-delete {
     padding: 5px;
@@ -775,7 +779,7 @@ table.editTable td > table > tbody > tr > td > .buttonSmall[value="Выбрат�
 }
 .colorpicker-component .input-group-addon {
     width: 40px;
-    line-height: 20px;
+    line-height: 16px;
 }
 .combobox-control > input.form-control {
     width: 225px;
@@ -2060,6 +2064,8 @@ div[id^=fileupload-main_] tbody.files > tr:first-child > td {
 .core-tabs > .core-tabs-body .pill-content > .active {display: block}
 
 .core-tabs > .core-tabs-body > .core-tabs-tabs {
+    display: inline-block;
+    width: 100%;
     padding-left: 0;
     margin-bottom: 20px;
     list-style: none;
@@ -2613,8 +2619,16 @@ table.coreui-table .search-container .control-type-text_strict input,
 table.coreui-table .search-container .control-type-select select,
 table.coreui-table .search-container .control-type-select2 select,
 table.coreui-table .search-container .control-type-multiselect2 select,
-table.coreui-table .search-container .control-type-multiselect select {
+table.coreui-table .search-container .control-type-autocomplete input,
+table.coreui-table .search-container .control-type-autocomplete_table input {
     width: 180px;
+}
+table.coreui-table .search-container .control-type-autocomplete input.ui-autocomplete-loading ,
+table.coreui-table .search-container .control-type-autocomplete_table input.ui-autocomplete-loading {
+    background-image: url("../img/load.gif");
+    background-position-y: center;
+    background-position-x: 97%;
+    background-repeat: no-repeat;
 }
 table.coreui-table .column-switcher-container form  {
     margin-bottom: 10px;
@@ -2742,6 +2756,7 @@ table.coreui-table .coreui-table-row-group {
 .coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > thead {
     position: sticky;
     top: 0;
+    z-index: 1;
 }
 .coreui-table-wrapper.coreui-table-limit-height .coreui-table-responsive > table > tfoot {
     position: sticky;

@@ -69,3 +69,16 @@
         <!-- END content_bottom -->
     </div>
 </div>
+
+<!-- BEGIN load_counts -->
+<script>
+    try {
+        let tabs = JSON.parse('[TABS_LOAD_COUNT]')
+        $.each(tabs, function (key, tab) {
+            CoreUI.panel.loadCount('[RESOURCE]', tab.id, tab.url);
+        });
+    } catch (e) {
+        console.warn(e);
+    }
+</script>
+<!-- END load_counts -->

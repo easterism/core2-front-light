@@ -250,6 +250,22 @@
                     </div>
                     <!-- END text -->
 
+                    <!-- BEGIN autocomplete -->
+                    <div>
+                      <input id="search-[RESOURCE]-[KEY]" class="form-control input-sm" type="text"
+                             name="search[[RESOURCE]][[KEY]]" value="[VALUE]" [IN_TEXT]/>
+                      <script> CoreUI.table.field.autocomplete($('#search-[RESOURCE]-[KEY]'), { url: '[URL]' }); </script>
+                    </div>
+                    <!-- END autocomplete -->
+
+                    <!-- BEGIN autocomplete_table -->
+                    <div>
+                      <input id="search-[RESOURCE]-[KEY]" class="form-control input-sm" type="text"
+                             name="search[[RESOURCE]][[KEY]]" value="[VALUE]" [IN_TEXT]/>
+                      <script> CoreUI.table.field.autocompleteTable($('#search-[RESOURCE]-[KEY]'), { url: '[URL]' }); </script>
+                    </div>
+                    <!-- END autocomplete_table -->
+
                     <!-- BEGIN radio -->
                     <div class="radio" [IN_TEXT]>
                       <label>
